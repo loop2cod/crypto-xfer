@@ -10,12 +10,11 @@ import { X, Eye, EyeOff, Check } from "lucide-react"
 import ProgressBar from "./progress-bar"
 
 interface PasswordScreenProps {
-  email: string
   onNext: (password: string) => void
   onBack: () => void
 }
 
-export default function PasswordScreen({ email, onNext, onBack }: PasswordScreenProps) {
+export default function PasswordScreen({ onNext, onBack }: PasswordScreenProps) {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)

@@ -75,7 +75,7 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
               <Mail className="w-8 h-8 text-gray-600" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Check your email</h1>
-            <p className="text-gray-600 text-sm sm:text-base mb-2">We've sent a verification code to</p>
+            <p className="text-gray-600 text-sm sm:text-base mb-2">We&apos;ve sent a verification code to</p>
             <p className="text-gray-900 font-medium">{email}</p>
           </div>
 
@@ -136,7 +136,7 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
               <Mail className="w-8 h-8 text-gray-600" />
             </div>
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 lg:mb-4">Check your email</h1>
-            <p className="text-gray-600 text-base lg:text-lg mb-2">We've sent a verification code to</p>
+            <p className="text-gray-600 text-base lg:text-lg mb-2">We&apos;ve sent a verification code to</p>
           </div>
 
           <div className="space-y-6">

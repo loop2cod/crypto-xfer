@@ -53,9 +53,9 @@ export default function EmailScreen({ onNext, onBack }: EmailScreenProps) {
 
         {/* Content */}
         <div className="flex-1 px-6 py-8">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">What's your email?</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">What&apos;s your email?</h1>
           <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8">
-            We'll use this to create your account and send important updates.
+            We&apos;ll use this to create your account and send important updates.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -99,9 +99,9 @@ export default function EmailScreen({ onNext, onBack }: EmailScreenProps) {
 
           {/* Content */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 lg:mb-4">What's your email?</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3 lg:mb-4">What&apos;s your email?</h1>
             <p className="text-gray-600 text-base lg:text-lg">
-              We'll use this to create your account and send important updates.
+              We&apos;ll use this to create your account and send important updates.
             </p>
           </div>
 

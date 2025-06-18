@@ -101,7 +101,7 @@ export default function SignupFlow() {
         <SignInPasswordScreen email={userData.email} onNext={handleSignInPasswordNext} onBack={handleBack} />
       )}
 
-      {currentStep === "dashboard" && <Dashboard email={userData.email} />}
+      {currentStep === "dashboard" && <Dashboard />}
     </>
   )
 }
