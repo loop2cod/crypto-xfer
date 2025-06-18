@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useState } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 
 interface Transaction {
-  id: string
+  id: any
   type: "crypto-to-fiat" | "fiat-to-crypto"
   amount: string
   currency: string
@@ -28,8 +29,9 @@ interface Transaction {
   }
 }
 
-export default function TransactionDetailsPage({ params }: { params: { id: string } }) {
+export default function TransactionDetailsPage() {
   const [copied, setCopied] = useState<string | null>(null)
+  const params = useParams()
 
   // Mock transaction data - in real app, fetch by ID
   const transaction: Transaction = {

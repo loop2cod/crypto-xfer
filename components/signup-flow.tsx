@@ -24,7 +24,7 @@ interface UserData {
 }
 
 export default function SignupFlow() {
-  const [currentStep, setCurrentStep] = useState<FlowStep>("welcome")
+  const [currentStep, setCurrentStep] = useState<FlowStep>("dashboard")
   const [userData, setUserData] = useState<UserData>({
     email: "",
     password: "",
@@ -88,7 +88,7 @@ export default function SignupFlow() {
       {currentStep === "signup-email" && <EmailScreen onNext={handleSignupEmailNext} onBack={handleBack} />}
 
       {currentStep === "signup-password" && (
-        <PasswordScreen email={userData.email} onNext={handleSignupPasswordNext} onBack={handleBack} />
+        <PasswordScreen onNext={handleSignupPasswordNext} onBack={handleBack} />
       )}
 
       {currentStep === "verification" && (

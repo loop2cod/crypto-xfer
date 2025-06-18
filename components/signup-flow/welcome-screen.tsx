@@ -13,7 +13,7 @@ export default function WelcomeScreen({ onGetStarted, onSignIn }: WelcomeScreenP
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-sm sm:max-w-md mx-auto">
         {/* Logo */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8 flex items-center justify-center">
           <XferLogo />
         </div>
 
