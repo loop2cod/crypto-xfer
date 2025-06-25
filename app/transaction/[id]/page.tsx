@@ -433,7 +433,7 @@ export default function TransactionDetailsPage() {
                 <span>View on Explorer</span>
               </Button>
             )}
-            <Link href="/">
+            <Link href="/dashboard">
               <Button className="w-full bg-gray-900 hover:bg-gray-800">Back to Dashboard</Button>
             </Link>
           </div>
