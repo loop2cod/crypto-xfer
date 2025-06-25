@@ -7,7 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+
+interface BankAccount {
+  id: string
+  accountName: string
+  accountNumber: string
+  bankName: string
+  routingNumber: string
+  transferAmount: string
+}
 
 interface Transaction {
   id: any
@@ -21,6 +30,8 @@ interface Transaction {
   wallet?: string
   fee: string
   txHash?: string
+  depositWallet?: string
+  bankAccounts?: BankAccount[]
   bankDetails?: {
     accountName: string
     accountNumber: string
@@ -30,6 +41,7 @@ interface Transaction {
 }
 
 export default function TransactionDetailsPage() {
+  const router = useRouter()
   const [copied, setCopied] = useState<string | null>(null)
   const params = useParams()
 
@@ -45,12 +57,25 @@ export default function TransactionDetailsPage() {
     recipient: "John Doe",
     fee: "5.00",
     txHash: "0x742d35cc6bf3c8f3a1234567890abcdef",
-    bankDetails: {
-      accountName: "John Doe",
-      accountNumber: "****1234",
-      bankName: "Chase Bank",
-      routingNumber: "021000021",
-    },
+    depositWallet: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
+    bankAccounts: [
+      {
+        id: "1",
+        accountName: "John Doe",
+        accountNumber: "****1234",
+        bankName: "Chase Bank",
+        routingNumber: "021000021",
+        transferAmount: "300.00"
+      },
+      {
+        id: "2",
+        accountName: "Jane Smith",
+        accountNumber: "****5678",
+        bankName: "Bank of America",
+        routingNumber: "026009593",
+        transferAmount: "195.00"
+      }
+    ],
   }
 
   const handleCopy = (text: string, type: string) => {
@@ -96,6 +121,25 @@ export default function TransactionDetailsPage() {
     })
   }
 
+  // Handle both old and new data structures
+  const getBankAccounts = () => {
+    if (transaction.bankAccounts && transaction.bankAccounts.length > 0) {
+      return transaction.bankAccounts;
+    } else if (transaction.bankDetails) {
+      // Convert old format to new format
+      return [{
+        id: "1",
+        accountName: transaction.bankDetails.accountName,
+        accountNumber: transaction.bankDetails.accountNumber,
+        bankName: transaction.bankDetails.bankName,
+        routingNumber: transaction.bankDetails.routingNumber,
+        transferAmount: (Number.parseFloat(transaction.amount) - Number.parseFloat(transaction.fee)).toFixed(2)
+      }];
+    }
+    return [];
+  };
+
+  const bankAccounts = getBankAccounts();
   const netAmount = (Number.parseFloat(transaction.amount) - Number.parseFloat(transaction.fee)).toFixed(2)
 
   return (
@@ -103,11 +147,9 @@ export default function TransactionDetailsPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <div className="flex items-center space-x-3">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="p-1">
+         <Button variant="ghost" size="sm" className="p-1" onClick={() => router.push("/dashboard")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-          </Link>
           <div className="flex items-center space-x-2">
             {getStatusIcon(transaction.status)}
             <h1 className="text-lg font-semibold text-gray-900">Transaction Details</h1>
@@ -169,7 +211,7 @@ export default function TransactionDetailsPage() {
 
           {/* Transaction Info */}
           <Card className="border-gray-200">
-            <CardHeader className="pb-3">
+            <CardHeader>
               <CardTitle className="text-base">Transaction Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -190,6 +232,22 @@ export default function TransactionDetailsPage() {
                       className="flex-shrink-0"
                     >
                       {copied === "txHash" ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {transaction.depositWallet && (
+                <div>
+                  <p className="text-sm text-gray-600">Deposit Wallet Address</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded flex-1 truncate">{transaction.depositWallet}</code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCopy(transaction.depositWallet!, "depositWallet")}
+                      className="flex-shrink-0"
+                    >
+                      {copied === "depositWallet" ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     </Button>
                   </div>
                 </div>
@@ -215,30 +273,111 @@ export default function TransactionDetailsPage() {
           </Card>
 
           {/* Bank Details (for crypto-to-fiat) */}
-          {transaction.type === "crypto-to-fiat" && transaction.bankDetails && (
+          {transaction.type === "crypto-to-fiat" && bankAccounts.length > 0 && (
             <Card className="border-gray-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Bank Account Details</CardTitle>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Bank Account Details
+                  {bankAccounts.length > 1 && (
+                    <span className="text-sm font-normal text-gray-500 ml-2">
+                      ({bankAccounts.length} accounts)
+                    </span>
+                  )}
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-1 gap-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Account Name:</span>
-                    <span className="font-medium text-gray-900">{transaction.bankDetails.accountName}</span>
+              <CardContent className="space-y-4">
+                {bankAccounts.map((account, index) => (
+                  <div key={account.id} className={index > 0 ? "pt-4 border-t border-gray-100" : ""}>
+                    {bankAccounts.length > 1 && (
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-gray-900">Account {index + 1}</h4>
+                        <Badge variant="outline" className="text-xs bg-gray-50">
+                          ${account.transferAmount} {transaction.currency}
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Account Name:</span>
+                        <span className="font-medium text-gray-900">{account.accountName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Account Number:</span>
+                        <span className="font-medium text-gray-900">{account.accountNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Bank Name:</span>
+                        <span className="font-medium text-gray-900">{account.bankName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Routing Number:</span>
+                        <span className="font-medium text-gray-900">{account.routingNumber}</span>
+                      </div>
+                      
+                      {bankAccounts.length > 1 && (
+                        <div className="flex justify-between pt-1">
+                          <span className="text-gray-600">Transfer Amount:</span>
+                          <span className="font-medium text-gray-900">${account.transferAmount}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Account Number:</span>
-                    <span className="font-medium text-gray-900">{transaction.bankDetails.accountNumber}</span>
+                ))}
+                
+                {/* Show distribution summary if multiple accounts */}
+                {bankAccounts.length > 1 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">Distribution Summary</h4>
+                    
+                    {/* Visual distribution bar */}
+                    <div className="mb-3">
+                      <div className="flex h-4 rounded-md overflow-hidden">
+                        {bankAccounts.map((account, index) => {
+                          const percentage = (parseFloat(account.transferAmount) / (parseFloat(transaction.amount) - parseFloat(transaction.fee))) * 100;
+                          const colors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-yellow-500", "bg-pink-500"];
+                          return (
+                            <div 
+                              key={`bar-${account.id}`} 
+                              className={`${colors[index % colors.length]}`}
+                              style={{ width: `${percentage}%` }}
+                              title={`${account.accountName}: $${account.transferAmount} (${percentage.toFixed(0)}%)`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                      {bankAccounts.map((account, index) => {
+                        const percentage = (parseFloat(account.transferAmount) / (parseFloat(transaction.amount) - parseFloat(transaction.fee))) * 100;
+                        const colors = ["text-blue-500", "text-green-500", "text-purple-500", "text-yellow-500", "text-pink-500"];
+                        return (
+                          <div key={`summary-${account.id}`} className="flex justify-between text-sm">
+                            <div className="flex items-center">
+                              <div className={`w-3 h-3 rounded-full ${colors[index % colors.length].replace('text-', 'bg-')} mr-2`}></div>
+                              <span className="text-gray-600">{account.accountName}:</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="font-medium text-gray-900">${account.transferAmount}</span>
+                              <span className="text-gray-500 ml-1">
+                                ({percentage.toFixed(0)}%)
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="flex justify-between pt-2 border-t border-gray-200 text-sm font-medium">
+                        <span>Total:</span>
+                        <span>${netAmount}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Bank Name:</span>
-                    <span className="font-medium text-gray-900">{transaction.bankDetails.bankName}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Routing Number:</span>
-                    <span className="font-medium text-gray-900">{transaction.bankDetails.routingNumber}</span>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           )}

@@ -24,7 +24,7 @@ interface UserData {
 }
 
 export default function SignupFlow() {
-  const [currentStep, setCurrentStep] = useState<FlowStep>("dashboard")
+  const [currentStep, setCurrentStep] = useState<FlowStep>("welcome")
   const [userData, setUserData] = useState<UserData>({
     email: "",
     password: "",

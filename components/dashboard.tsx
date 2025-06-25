@@ -338,7 +338,7 @@ export default function Dashboard() {
                 </Button>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col space-y-2">
                 {transactions.map((transaction) => (
                   <Link key={transaction.id} href={`/transaction/${transaction.id}`}>
                     <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">

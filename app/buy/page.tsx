@@ -48,7 +48,7 @@ export default function BuyPage() {
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsLoading(false)
-    router.push("/?success=buy")
+    router.push("/dashboard")
   }
 
   return (
@@ -56,17 +56,15 @@ export default function BuyPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <div className="flex items-center space-x-3">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="p-1">
+      <Button variant="ghost" size="sm" className="p-1" onClick={() => router.push("/dashboard")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-          </Link>
           <h1 className="text-lg font-semibold text-gray-900">Buy USDT</h1>
         </div>
       </header>
 
-      <div className="p-4">
-        <div className="bg-white rounded-lg p-4">
+      <div>
+        <div className="bg-white rounded-lg p-3">
           {/* Step Indicator */}
           <div className="flex items-center justify-center mb-6">
             {[1, 2, 3].map((stepNum) => (
@@ -100,7 +98,7 @@ export default function BuyPage() {
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="text-lg mt-1"
+                  className="mt-1 text-xs md:text-sm"
                   disabled={isLoading}
                 />
               </div>
@@ -114,18 +112,18 @@ export default function BuyPage() {
                   placeholder="TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE"
                   value={walletAddress}
                   onChange={(e) => setWalletAddress(e.target.value)}
-                  className="mt-1"
+                  className="mt-1 text-xs md:text-sm"
                   disabled={isLoading}
                 />
-                <p className="text-sm text-gray-500 mt-1">Make sure this is a TRC20 USDT address</p>
+                <p className="text-xs md:text-sm text-gray-500 mt-1">Make sure this is a TRC20 USDT address</p>
               </div>
 
               <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex justify-between text-xs md:text-sm mb-2">
                   <span className="text-gray-600">Amount:</span>
                   <span className="font-medium text-gray-900">${amount || "0.00"} USD</span>
                 </div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex justify-between text-xs md:text-sm mb-2">
                   <span className="text-gray-600">Fee (1%):</span>
                   <span className="font-medium text-gray-900">
                     ${amount ? (Number.parseFloat(amount) * 0.01).toFixed(2) : "0.00"} USD
