@@ -1,7 +1,13 @@
-import SignupFlow from "@/components/signup-flow";
+'use client'
+import AppRouter from "@/components/AppRouter";
+import ToastContainer from "@/components/ui/toast-container";
+import useToast from "@/hooks/useToast";
 
 export default function Home() {
+  const { showToast, toasts, hideToast } = useToast()
   return (
-   <SignupFlow />
+   <>
+   <AppRouter />
+         <ToastContainer toasts={toasts} onHideToast={hideToast} /></>
   );
 }

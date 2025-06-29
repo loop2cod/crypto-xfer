@@ -7,18 +7,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Mail } from "lucide-react"
 import ProgressBar from "./progress-bar"
+import { useAuth } from "@/context/AuthContext"
+import authService from "@/services/auth"
 
 interface VerificationScreenProps {
   email: string
-  onNext: () => void
+  onNext: (code: string) => void
   onBack: () => void
+  isLoading?: boolean
 }
 
-export default function VerificationScreen({ email, onNext, onBack }: VerificationScreenProps) {
+export default function VerificationScreen({ email, onNext, onBack, isLoading = false }: VerificationScreenProps) {
   const [code, setCode] = useState("")
   const [timeLeft, setTimeLeft] = useState(60)
   const [canResend, setCanResend] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -29,21 +32,24 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
     }
   }, [timeLeft])
 
-  const handleResend = () => {
-    setTimeLeft(60)
-    setCanResend(false)
-    // Simulate resending code
-    console.log("Resending verification code to:", email)
+  const handleResend = async () => {
+    try {
+      setError("")
+      const response = await authService.sendPreRegistrationCode({ email })
+          if (response.success) {
+      setTimeLeft(60)
+      setCanResend(false)
+          } else {
+            setError(response.message || "Failed to resend verification code")
+          }
+    } catch (error: any) {
+      setError(error.message || "Failed to resend verification code")
+    }
   }
 
   const handleVerify = async () => {
     if (code.length === 6) {
-      setIsVerifying(true)
-      // Simulate verification
-      setTimeout(() => {
-        setIsVerifying(false)
-        onNext()
-      }, 1500)
+      onNext(code)
     }
   }
 
@@ -53,23 +59,23 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col p-4 sm:p-6 lg:p-8">
       {/* Mobile Layout */}
       <div className="md:hidden flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6">
+        <div className="flex items-center justify-between">
           <button onClick={onBack} className="p-2">
             <X className="w-6 h-6 text-gray-600" />
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="px-6">
+        <div className="">
           <ProgressBar currentStep={3} totalSteps={3} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 px-6 py-8">
+        <div className="flex-1">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-8 h-8 text-gray-600" />
@@ -90,6 +96,11 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
                 maxLength={6}
                 autoFocus
               />
+              {error && (
+                <div className="text-center text-sm text-red-500 mt-2">
+                  {error}
+                </div>
+              )}
             </div>
 
             <div className="text-center">
@@ -105,26 +116,25 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
         </div>
 
         {/* Bottom Button */}
-        <div className="p-6">
+        <div className="mt-4 md:mt-6">
           <Button
             onClick={handleVerify}
-            disabled={code.length !== 6 || isVerifying}
+            disabled={code.length !== 6 || isLoading}
             className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-300"
           >
-            {isVerifying ? "Verifying..." : "Verify Email"}
+            {isLoading ? "Verifying..." : "Verify Email"}
           </Button>
         </div>
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden md:flex  justify-center min-h-screen p-8">
+      <div className="hidden md:flex  justify-center min-h-screen">
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <button onClick={onBack} className="p-2">
               <X className="w-6 h-6 text-gray-600" />
             </button>
-            <span className="text-sm font-medium text-gray-600">3/3</span>
           </div>
 
           {/* Progress Bar */}
@@ -164,10 +174,10 @@ export default function VerificationScreen({ email, onNext, onBack }: Verificati
 
             <Button
               onClick={handleVerify}
-              disabled={code.length !== 6 || isVerifying}
+              disabled={code.length !== 6 || isLoading}
               className="w-full h-11 lg:h-12 text-base lg:text-lg font-medium bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-300"
             >
-              {isVerifying ? "Verifying..." : "Verify Email"}
+              {isLoading ? "Verifying..." : "Verify Email"}
             </Button>
           </div>
         </div>

@@ -6,14 +6,18 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { X, Eye, EyeOff } from "lucide-react"
+import { useAuth } from "@/context/AuthContext"
+import authService from "@/services/auth"
 
 interface SignInPasswordScreenProps {
   email: string
-  onNext: () => void
+  onNext: (password: string) => void
   onBack: () => void
+  onForgotPassword?: () => void
+  isLoading?: boolean
 }
 
-export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPasswordScreenProps) {
+export default function SignInPasswordScreen({ email, onNext, onBack, onForgotPassword, isLoading = false }: SignInPasswordScreenProps) {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isSigningIn, setIsSigningIn] = useState(false)
@@ -21,15 +25,21 @@ export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPa
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password.length >= 8) {
-      setIsSigningIn(true)
-      setError("")
-
-      // Simulate sign in
-      setTimeout(() => {
+    if (password.length >= 1) {
+      try {
+        setError("")
+        setIsSigningIn(true)
+        const response = await authService.login({ email, password })
+        if (response.success) {
+          onNext(password) // This will trigger the redirect to dashboard
+        } else {
+          setError(response.message || "Login failed")
+        }
+      } catch (error: any) {
+        setError(error.message || "Login failed")
+      } finally {
         setIsSigningIn(false)
-        onNext()
-      }, 1500)
+      }
     }
   }
 
@@ -45,7 +55,7 @@ export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPa
         </div>
 
         {/* Content */}
-        <div className="flex-1 px-4 sm:px-6 py-6 sm:py-8">
+        <div className="flex-1 px-4 sm:px-6 py-2 sm:py-8">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Enter Password</h1>
           <p className="text-gray-600 text-sm sm:text-base mb-2">Welcome back!</p>
           <p className="text-gray-500 text-xs sm:text-sm mb-6 sm:mb-8">{email}</p>
@@ -77,7 +87,11 @@ export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPa
             </div>
 
             <div className="text-center">
-              <button type="button" className="text-sm text-blue-600 hover:text-blue-700">
+              <button 
+                type="button" 
+                onClick={onForgotPassword}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
                 Forgot password?
               </button>
             </div>
@@ -88,10 +102,10 @@ export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPa
         <div className="p-4 sm:p-6">
           <Button
             onClick={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
-            disabled={password.length < 8 || isSigningIn}
+            disabled={password.length < 1 || isSigningIn || isLoading}
             className="w-full h-10 sm:h-11 text-sm sm:text-base font-medium bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-300"
           >
-            {isSigningIn ? "Signing In..." : "Sign In"}
+            {isSigningIn || isLoading ? "Signing In..." : "Sign In"}
           </Button>
         </div>
       </div>
@@ -140,17 +154,21 @@ export default function SignInPasswordScreen({ email, onNext, onBack }: SignInPa
             </div>
 
             <div className="text-center">
-              <button type="button" className="text-sm lg:text-base text-blue-600 hover:text-blue-700">
+              <button 
+                type="button" 
+                onClick={onForgotPassword}
+                className="text-sm lg:text-base text-blue-600 hover:text-blue-700"
+              >
                 Forgot password?
               </button>
             </div>
 
             <Button
               type="submit"
-              disabled={password.length < 8 || isSigningIn}
+              disabled={password.length < 1 || isSigningIn || isLoading}
               className="w-full h-11 lg:h-12 text-base lg:text-lg font-medium bg-gray-900 hover:bg-gray-800 text-white disabled:bg-gray-300"
             >
-              {isSigningIn ? "Signing In..." : "Sign In"}
+              {isSigningIn || isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
         </div>

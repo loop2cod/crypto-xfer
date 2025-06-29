@@ -1,10 +1,10 @@
 "use client"
 
-export default function XferLogo() {
+export default function XferLogo(){
   return (
         <svg
-          width="200"
-          height="80"
+          width="100%"
+          height="100%"
           viewBox="0 0 300 120"
           xmlns="http://www.w3.org/2000/svg"
           className="drop-shadow-lg"

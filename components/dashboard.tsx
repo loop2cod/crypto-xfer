@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {  RefreshCw, Send, Plus, Clock, CheckCircle, AlertCircle, Eye } from "lucide-react"
+import {  RefreshCw, Send, Plus, Clock, CheckCircle, AlertCircle, Eye, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import XferLogo from "./logo/xfer-logo"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/context/AuthContext"
+import useToast from "@/hooks/useToast"
 
 interface Transaction {
   id: string
@@ -31,12 +33,19 @@ interface Transaction {
 }
 
 export default function Dashboard() {
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState("Overview")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const navigate = useRouter()
+  const { logout, user } = useAuth()
 
-  const email = "user@example.com"
+  const email = user?.email || "user@example.com"
+
+  const handleLogout = () => {
+    logout()
+    // Note: The auth context will handle redirecting to login
+  }
 
   // Mock transaction data
   const [transactions] = useState<Transaction[]>([
@@ -178,11 +187,25 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-   <header className="flex items-center justify-between px-3 border-b border-gray-200 bg-white">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <div className="text-gray-900 scale-100 sm:scale-120">
-            <XferLogo />
+   <header className="md:px-3 md:py-3 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between mx-auto max-w-6xl">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="text-gray-900 scale-100 sm:scale-120 h-16 md:h-20">
+            <XferLogo/>
           </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600 hidden sm:inline">{email}</span>
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            size="sm"
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="ml-1 hidden sm:inline">Logout</span>
+          </Button>
+        </div>
         </div>
       </header>
 
