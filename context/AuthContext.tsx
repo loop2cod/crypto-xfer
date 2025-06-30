@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authService,  LoginRequest, RegisterRequest, VerificationRequest, ResendVerificationRequest } from '@/services/auth';
+import { authService } from '@/services/auth';
 import AuthPersistence from '@/utils/auth-persistence';
 
 interface AuthState {

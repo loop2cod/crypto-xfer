@@ -10,7 +10,9 @@ import Link from "next/link"
 import XferLogo from "./logo/xfer-logo"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
+import { useTransfer } from "@/context/TransferContext"
 import useToast from "@/hooks/useToast"
+import TransferHistory from "@/components/transfer-history"
 
 interface Transaction {
   id: string
@@ -39,6 +41,7 @@ export default function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const navigate = useRouter()
   const { logout, user } = useAuth()
+  const { transfers, getUserTransfers, isLoading: transfersLoading } = useTransfer()
 
   const email = user?.email || "user@example.com"
 
@@ -310,88 +313,30 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Recent Transactions */}
-              <Card className="border-gray-200 gap-0 p-2 md:p-4">
-                <CardHeader className="p-2 md:p-4">
-                  <CardTitle className="text-base">Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent className="p-2 md:p-4 pt-0">
-                  <div className="space-y-3">
-                    {transactions.slice(0, 3).map((transaction) => (
-                      <div key={transaction.id}
-                      onClick={() => {
-                        navigate.push(`/transaction/${transaction.id}`)
-                      }}>
-                        <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                          <div className="flex items-center space-x-3 min-w-0 flex-1">
-                            {getStatusIcon(transaction.status)}
-                            <div className="min-w-0 flex-1">
-                              <div className="font-medium text-gray-900 text-sm truncate">
-                                {transaction.type === "crypto-to-fiat" ? "Send to Bank" : "Buy USDT"}
-                              </div>
-                              <div className="text-xs text-gray-500 truncate">
-                                {transaction.recipient || transaction.wallet}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0 ml-3">
-                            <div className="font-medium text-gray-900 text-sm">
-                              {transaction.amount} {transaction.currency}
-                            </div>
-                            <Badge className={`${getStatusColor(transaction.status)} text-xs`}>
-                              {transaction.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Recent Transfers */}
+              <TransferHistory 
+                limit={3}
+                showFilters={false}
+                showPagination={false}
+              />
             </div>
           )}
 
           {activeTab === "Activity" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-base font-semibold">Transaction History</h3>
+                <h3 className="text-base font-semibold">Transfer History</h3>
                 <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
                   <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                   <span className="text-xs">Refresh</span>
                 </Button>
               </div>
 
-              <div className="flex flex-col space-y-2">
-                {transactions.map((transaction) => (
-                  <Link key={transaction.id} href={`/transaction/${transaction.id}`}>
-                    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        {getStatusIcon(transaction.status)}
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium text-gray-900 text-sm">
-                            {transaction.type === "crypto-to-fiat" ? "Crypto to Fiat" : "Fiat to Crypto"}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {transaction.date} • {transaction.recipient || transaction.wallet}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-3 flex items-center space-x-2">
-                        <div>
-                          <div className="font-medium text-gray-900 text-sm">
-                            {transaction.type === "crypto-to-fiat" ? "-" : "+"}
-                            {transaction.amount} {transaction.currency}
-                          </div>
-                          <Badge className={`${getStatusColor(transaction.status)} text-xs`}>
-                            {transaction.status}
-                          </Badge>
-                        </div>
-                        <Eye className="w-4 h-4 text-gray-400" />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <TransferHistory 
+                limit={20}
+                showFilters={true}
+                showPagination={true}
+              />
             </div>
           )}
         </div>

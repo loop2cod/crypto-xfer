@@ -28,19 +28,27 @@ const refreshTokenApi = async () => {
   try {
     const refresh_token = localStorage.getItem('refresh_token');
     if (!refresh_token) {
+      console.log("No refresh token available");
       throw new Error("No refresh token available");
     }
 
+    console.log("Attempting to refresh token...");
     const response = await axiosApi.post(`/api/v1/auth/refresh`, {
       refresh_token
     });
 
-    if (response?.data?.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-      localStorage.setItem('refresh_token', response.data.refresh_token);
-      localStorage.setItem('token_type', response.data.token_type);
+    console.log("Refresh response:", response.data);
+
+    // Backend returns data wrapped in BaseResponse format
+    if (response?.data?.success && response?.data?.data?.access_token) {
+      const tokenData = response.data.data;
+      localStorage.setItem('access_token', tokenData.access_token);
+      localStorage.setItem('refresh_token', tokenData.refresh_token);
+      localStorage.setItem('token_type', tokenData.token_type);
+      console.log("Token refreshed successfully");
       return true;
     } else {
+      console.log("Token refresh failed - invalid response format");
       throw new Error("Token refresh failed");
     }
   } catch (error) {

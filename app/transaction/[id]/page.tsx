@@ -147,7 +147,7 @@ export default function TransactionDetailsPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <div className="flex items-center space-x-3">
-         <Button variant="ghost" size="sm" className="p-1" onClick={() => router.push("/dashboard")}>
+         <Button variant="ghost" size="sm" className="p-1" onClick={() => router.push("/")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
           <div className="flex items-center space-x-2">

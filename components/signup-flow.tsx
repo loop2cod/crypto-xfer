@@ -58,20 +58,20 @@ export default function SignupFlow() {
       const response = await authService.sendPreRegistrationCode({ email })
       if (response.success) {
         showToast({
-          type: 'success',
+          variant: 'success',
           message: 'Verification code sent to your email!',
         })
 
         setCurrentStep("verification")
       } else {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: response.message || 'Failed to send verification code. Please try again.',
         })
       }
     } catch (error: any) {
       showToast({
-        type: 'error',
+        variant: 'destructive',
         message: error.message || 'Failed to send verification code. Please try again.',
       })
     } finally {
@@ -95,7 +95,7 @@ export default function SignupFlow() {
 
       if (!registerResponse.success) {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: registerResponse.message || 'Registration failed. Please try again.',
         })
         return
@@ -110,7 +110,7 @@ export default function SignupFlow() {
 
       if (!loginResponse.success) {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: loginResponse.message || 'Login failed after registration. Please try signing in manually.',
         })
         return
@@ -122,7 +122,7 @@ export default function SignupFlow() {
 
         // Success - show welcome message
         showToast({
-          type: 'success',
+          variant: 'success',
           message: 'Account created successfully! Welcome to Xfer.',
         })
         localStorage.setItem('access_token', loginResponse.data.access_token);
@@ -132,7 +132,7 @@ export default function SignupFlow() {
 
     } catch (error: any) {
       showToast({
-        type: 'error',
+        variant: 'destructive',
         message: error.message || 'An unexpected error occurred. Please try again.',
       })
     } finally {
@@ -151,20 +151,20 @@ export default function SignupFlow() {
         setUserData((prev) => ({ ...prev, verificationCode }))
 
         showToast({
-          type: 'success',
+          variant: 'success',
           message: 'Code verified! Now set your password.',
         })
 
         setCurrentStep("signup-password")
       } else {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: response.message || 'Invalid verification code. Please try again.',
         })
       }
     } catch (error: any) {
       showToast({
-        type: 'error',
+        variant: 'destructive',
         message: error.message || 'Invalid verification code. Please try again.',
       })
     } finally {
@@ -187,7 +187,7 @@ export default function SignupFlow() {
       })
       if (!loginResponse.success) {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: loginResponse.message || 'Login failed. Please check your credentials.',
         })
         return
@@ -196,7 +196,7 @@ export default function SignupFlow() {
       // Explicitly set tokens in localStorage
       if (loginResponse.data.access_token) {
         showToast({
-          type: 'success',
+          variant: 'success',
           message: 'Welcome back to Xfer!',
         })
         localStorage.setItem('access_token', loginResponse.data.access_token);
@@ -208,7 +208,7 @@ export default function SignupFlow() {
       // AppRouter will automatically show dashboard
     } catch (error: any) {
       showToast({
-        type: 'error',
+        variant: 'destructive',
         message: error.message || 'Login failed. Please check your credentials.',
       })
     } finally {
@@ -228,7 +228,7 @@ export default function SignupFlow() {
 
       if (response.success) {
         showToast({
-          type: 'success',
+          variant: 'success',
           message: response.message,
         })
 
@@ -236,13 +236,13 @@ export default function SignupFlow() {
         setCurrentStep("signin-email")
       } else {
         showToast({
-          type: 'error',
+          variant: 'destructive',
           message: response.message,
         })
       }
     } catch (error: any) {
       showToast({
-        type: 'error',
+        variant: 'destructive',
         message: error.message || 'Failed to send reset link. Please try again.',
       })
     } finally {
