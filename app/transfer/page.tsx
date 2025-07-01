@@ -53,6 +53,7 @@ export default function TransferPage() {
 
   const [copied, setCopied] = useState(false)
   const [primaryWallet, setPrimaryWallet] = useState<any>(null)
+  const [isMaintenanceMode, setIsMaintenanceMode] = useState(false)
   const [hashVerification, setHashVerification] = useState<{
     isVerifying: boolean
     isVerified: boolean
@@ -81,7 +82,8 @@ export default function TransferPage() {
         setFeePercentage(feePercent / 100)
       } catch (error: any) {
         console.error('Failed to fetch primary wallet:', error)
-        
+        setIsMaintenanceMode(true)
+
         // Handle authentication errors
         if (error?.response?.status === 401) {
           toast({
@@ -92,27 +94,13 @@ export default function TransferPage() {
           // Could redirect to login page
           return
         }
-        
-        // Use default values if API fails for other reasons
-        console.log("Using default wallet settings due to API error")
-        // Set some reasonable defaults
-        setPrimaryWallet({
-          id: 'default',
-          name: 'Default Wallet',
-          address: 'TAQ2TfR4Pk6GPstVPExPo4QvdwcyJTzDSf',
-          currency: 'USDT',
-          network: 'TRC20',
-          fee_percentage: 1, // 1% as percentage value
-          is_active: true,
-          is_primary: true
-        })
 
-        // Set default fee percentage (1% -> 0.01)
-        setFeePercentage(0.01)
-        
+        // Set maintenance mode for any other API failures
+        console.log("Setting maintenance mode due to primary wallet fetch failure")
+
         toast({
-          title: "Warning",
-          description: "Using default wallet settings. Some features may be limited.",
+          title: "Service Under Maintenance",
+          description: "The transfer service is temporarily unavailable. Please try again later.",
           variant: "destructive",
         })
       }
@@ -286,25 +274,54 @@ export default function TransferPage() {
 
       <div>
         <div className="bg-white rounded-lg p-3">
-          {/* Step Indicator */}
-          <div className="flex items-center justify-center mb-6">
-            {[1, 2, 3].map((stepNum) => (
-              <div key={stepNum} className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    transferStep >= stepNum ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  {stepNum}
+          {/* Maintenance Mode Message */}
+          {isMaintenanceMode ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 max-w-md w-full text-center">
+                <div className="mb-4">
+                  <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-orange-800 mb-2">Service Under Maintenance</h3>
+                  <p className="text-sm text-orange-700 mb-4">
+                    The transfer service is temporarily unavailable. We're working to restore service as quickly as possible.
+                  </p>
+                  <p className="text-xs text-orange-600">
+                    Please try again later or contact support if this issue persists.
+                  </p>
                 </div>
-                {stepNum < 3 && (
-                  <div
-                    className={`w-8 h-0.5 mx-2 transition-colors ${transferStep > stepNum ? "bg-gray-900" : "bg-gray-200"}`}
-                  />
-                )}
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                >
+                  Refresh Page
+                </Button>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <>
+              {/* Step Indicator */}
+              <div className="flex items-center justify-center mb-6">
+                {[1, 2, 3].map((stepNum) => (
+                  <div key={stepNum} className="flex items-center">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                        transferStep >= stepNum ? "bg-gray-900 text-white" : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {stepNum}
+                    </div>
+                    {stepNum < 3 && (
+                      <div
+                        className={`w-8 h-0.5 mx-2 transition-colors ${transferStep > stepNum ? "bg-gray-900" : "bg-gray-200"}`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
 
           {/* Step 1: Enter Amount */}
           {transferStep === 1 && (
@@ -681,6 +698,8 @@ export default function TransferPage() {
                 </Button>
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
