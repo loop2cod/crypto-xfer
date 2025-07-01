@@ -34,7 +34,7 @@ export interface TransferResponse {
   id: string;
   transfer_id: string;
   user_id: string;
-  type: string;
+  type_: string;
   amount: number;
   fee: number;
   net_amount: number;
@@ -168,8 +168,8 @@ export const transferService = {
     const fee = amount * feePercentage;
     const netAmount = amount - fee;
     return {
-      fee: parseFloat(fee.toFixed(2)),
-      netAmount: parseFloat(netAmount.toFixed(2))
+      fee: Math.round(fee * 100) / 100,
+      netAmount: Math.round(netAmount * 100) / 100
     };
   },
 

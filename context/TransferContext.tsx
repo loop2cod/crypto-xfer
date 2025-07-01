@@ -228,30 +228,63 @@ export const TransferProvider: React.FC<TransferProviderProps> = ({ children }) 
   }, []);
 
   const getTotalAllocated = useCallback(() => {
-    return bankAccounts.reduce((sum, account) => {
+    const total = bankAccounts.reduce((sum, account) => {
       const accountAmount = account.transferAmount ? parseFloat(account.transferAmount) : 0;
       return sum + accountAmount;
     }, 0);
+    // Round to 2 decimal places to avoid floating-point precision issues
+    return Math.round(total * 100) / 100;
   }, [bankAccounts]);
 
   const getRemainingAmount = useCallback(() => {
     const totalAmount = transferAmount ? parseFloat(transferAmount) * (1 - feePercentage) : 0; // Total after fee
     const allocated = getTotalAllocated();
-    return Math.max(0, totalAmount - allocated);
+    const remaining = totalAmount - allocated;
+    // Round to 2 decimal places to avoid floating-point precision issues
+    return Math.max(0, Math.round(remaining * 100) / 100);
   }, [transferAmount, feePercentage, getTotalAllocated]);
 
   const areAllBankAccountsValid = useCallback(() => {
     const totalAmount = transferAmount ? parseFloat(transferAmount) * (1 - feePercentage) : 0;
     const totalAllocated = getTotalAllocated();
-    
-    return bankAccounts.every(account =>
-      account.accountName &&
-      account.accountNumber &&
-      account.bankName &&
-      account.routingNumber &&
+
+    // Use a small epsilon for floating-point comparison to handle precision issues
+    const epsilon = 0.01; // 1 cent tolerance
+
+    // Check if all bank accounts have valid data
+    const allAccountsHaveValidData = bankAccounts.every(account =>
+      account.accountName.trim() &&
+      account.accountNumber.trim() &&
+      account.bankName.trim() &&
+      account.routingNumber.trim() &&
       account.transferAmount &&
       parseFloat(account.transferAmount) > 0
-    ) && totalAllocated <= totalAmount && totalAllocated > 0;
+    );
+
+    // Check if total allocation is valid (not exceeding available amount with tolerance)
+    const isAllocationValid = totalAllocated > 0 && totalAllocated <= (totalAmount + epsilon);
+
+    // Debug logging to help troubleshoot validation issues
+    if (transferAmount && bankAccounts.some(acc => acc.transferAmount)) {
+      console.log('Validation Debug:', {
+        transferAmount,
+        feePercentage,
+        totalAmount: totalAmount.toFixed(2),
+        totalAllocated: totalAllocated.toFixed(2),
+        allAccountsHaveValidData,
+        isAllocationValid,
+        bankAccounts: bankAccounts.map(acc => ({
+          id: acc.id,
+          accountName: acc.accountName,
+          accountNumber: acc.accountNumber,
+          bankName: acc.bankName,
+          routingNumber: acc.routingNumber,
+          transferAmount: acc.transferAmount
+        }))
+      });
+    }
+
+    return allAccountsHaveValidData && isAllocationValid;
   }, [bankAccounts, transferAmount, feePercentage, getTotalAllocated]);
 
   const value: TransferContextType = {

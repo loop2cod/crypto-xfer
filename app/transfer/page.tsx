@@ -538,7 +538,9 @@ export default function TransferPage() {
                         .reduce((sum, acc) => sum + (acc.transferAmount ? parseFloat(acc.transferAmount) : 0), 0);
                       const totalAvailable = transferAmount ? calculateFeeAndNet(parseFloat(transferAmount)).netAmount : 0;
                       const maxForThisAccount = Math.max(0, totalAvailable - otherAccountsTotal);
-                      const isExceeding = currentAmount > maxForThisAccount;
+                      // Round to 2 decimal places to avoid floating-point precision issues
+                      const roundedMax = Math.round(maxForThisAccount * 100) / 100;
+                      const isExceeding = currentAmount > (roundedMax + 0.01); // Add small tolerance
                       
                       return (
                         <>
@@ -553,11 +555,11 @@ export default function TransferPage() {
                           />
                           {isExceeding && (
                             <p className="text-xs text-red-500 mt-1">
-                              Exceeds available amount. Maximum: ${maxForThisAccount.toFixed(2)}
-                              <Button 
-                                variant="link" 
+                              Exceeds available amount. Maximum: ${roundedMax.toFixed(2)}
+                              <Button
+                                variant="link"
                                 className="text-xs p-0 h-auto text-red-500 underline ml-1"
-                                onClick={() => updateBankAccount(account.id, "transferAmount", maxForThisAccount.toString())}
+                                onClick={() => updateBankAccount(account.id, "transferAmount", roundedMax.toString())}
                               >
                                 Use max
                               </Button>
@@ -661,12 +663,13 @@ export default function TransferPage() {
                           const accountsWithValues = bankAccounts.filter(acc => acc.transferAmount && parseFloat(acc.transferAmount) > 0);
                           if (accountsWithValues.length > 0) {
                             const lastAccount = accountsWithValues[accountsWithValues.length - 1];
-                            const currentAmount = parseFloat(lastAccount.transferAmount);
                             const otherAccountsTotal = bankAccounts
                               .filter(acc => acc.id !== lastAccount.id)
                               .reduce((sum, acc) => sum + (acc.transferAmount ? parseFloat(acc.transferAmount) : 0), 0);
                             const maxForLastAccount = Math.max(0, totalAvailable - otherAccountsTotal);
-                            updateBankAccount(lastAccount.id, "transferAmount", maxForLastAccount.toString());
+                            // Round to 2 decimal places to avoid floating-point precision issues
+                            const roundedMax = Math.round(maxForLastAccount * 100) / 100;
+                            updateBankAccount(lastAccount.id, "transferAmount", roundedMax.toString());
                           }
                         }}
                       >

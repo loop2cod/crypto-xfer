@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, RefreshCw, Copy, Check } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTransfer } from '@/context/TransferContext';
 import TransferStatus from '@/components/transfer-status';
+import TransferTimeline from '@/components/transfer-timeline';
 import { useToast } from '@/hooks/useToast';
 import AuthWrapper from '@/components/AuthWrapper';
 
@@ -21,30 +22,10 @@ export default function TransferStatusPage() {
     isLoading,
     error,
     getTransferById,
-    getUserTransfers,
+    getTransferStatus,
   } = useTransfer();
 
-  const [copiedHash, setCopiedHash] = useState(false);
 
-  // Copy hash function
-  const copyHashToClipboard = async (hash: string) => {
-    try {
-      await navigator.clipboard.writeText(hash);
-      setCopiedHash(true);
-      setTimeout(() => setCopiedHash(false), 2000);
-      toast({
-        title: "Copied!",
-        description: "Transaction hash copied to clipboard",
-      });
-    } catch (error) {
-      console.error('Failed to copy hash:', error);
-      toast({
-        title: "Copy Failed",
-        description: "Could not copy transaction hash",
-        variant: "destructive",
-      });
-    }
-  };
 
   useEffect(() => {
     if (transferId) {
@@ -65,6 +46,8 @@ export default function TransferStatusPage() {
   const handleRefresh = async () => {
     if (transferId) {
       await getTransferById(transferId);
+      await getTransferStatus(transferId);
+
       toast({
         title: "Refreshed",
         description: "Transfer status has been updated",
@@ -160,94 +143,7 @@ export default function TransferStatusPage() {
               <CardTitle>Transfer Timeline</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="font-medium">Transfer Created</p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(currentTransfer.created_at).toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Transfer request submitted successfully
-                    </p>
-                  </div>
-                </div>
-
-                {currentTransfer.crypto_tx_hash && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="font-medium">Crypto Deposit Detected</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm text-gray-600 flex-1">
-                          Transaction Hash: {currentTransfer.crypto_tx_hash}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyHashToClipboard(currentTransfer.crypto_tx_hash!)}
-                          className="h-6 w-6 p-0"
-                        >
-                          {copiedHash ? (
-                            <Check className="w-3 h-3" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                        </Button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Transaction verified, processing transfer
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {currentTransfer.status === 'processing' && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 animate-pulse"></div>
-                    <div>
-                      <p className="font-medium">Processing Transfer</p>
-                      <p className="text-sm text-gray-600">
-                        {currentTransfer.updated_at && new Date(currentTransfer.updated_at).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Preparing bank transfers
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {currentTransfer.status === 'completed' && currentTransfer.completed_at && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Transfer Completed</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(currentTransfer.completed_at).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Funds have been sent to your bank account(s)
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {currentTransfer.status === 'failed' && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="font-medium">Transfer Failed</p>
-                      <p className="text-sm text-gray-600">
-                        {currentTransfer.updated_at && new Date(currentTransfer.updated_at).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {currentTransfer.status_message || 'Transfer could not be completed'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <TransferTimeline transfer={currentTransfer} />
             </CardContent>
           </Card>
         )}

@@ -52,7 +52,7 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
 
   const filteredTransfers = transfers.filter(transfer => {
     const matchesStatus = !statusFilter || transfer.status === statusFilter;
-    const matchesType = !typeFilter || transfer.type === typeFilter;
+    const matchesType = !typeFilter || transfer.type_ === typeFilter;
     return matchesStatus && matchesType;
   });
 
@@ -130,7 +130,7 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
           <div className="space-y-3">
             {filteredTransfers.slice(0, limit).map((transfer) => {
               const StatusIcon = getStatusIcon(transfer.status);
-              const TypeIcon = getTypeIcon(transfer.type);
+              const TypeIcon = getTypeIcon(transfer.type_);
               const statusInfo = transferService.formatTransferStatus(transfer.status);
               
               return (
@@ -147,7 +147,7 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="font-medium text-xs md:text-sm">
-                          {transfer.type === 'crypto-to-fiat' ? 'Send to Bank' : 'Buy Crypto'}
+                          {transfer?.type_ === 'crypto-to-fiat' ? 'Send to Bank' : 'Buy Crypto'}
                         </span>
                         <Badge 
                           variant="secondary"

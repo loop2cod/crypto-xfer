@@ -20,7 +20,7 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
   transferId,
   showDetails = true,
   autoRefresh = true,
-  refreshInterval = 30000, // 30 seconds
+  refreshInterval = 60000, // 30 seconds
 }) => {
   const { currentTransfer, getTransferStatus } = useTransfer();
   const [status, setStatus] = useState<{
@@ -222,7 +222,7 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
         )}
 
         {/* Status History */}
-        {currentTransfer?.status_history && currentTransfer.status_history.length > 0 && (
+        {/* {currentTransfer?.status_history && currentTransfer.status_history.length > 0 && (
           <div className="border-t pt-4">
             <Collapsible open={showHistory} onOpenChange={setShowHistory}>
               <CollapsibleTrigger asChild>
@@ -279,7 +279,7 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
               </CollapsibleContent>
             </Collapsible>
           </div>
-        )}
+        )} */}
 
         {/* Last Updated */}
         <div className="text-xs text-gray-500 border-t pt-2">
