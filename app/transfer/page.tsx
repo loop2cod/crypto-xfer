@@ -286,7 +286,7 @@ export default function TransferPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-orange-800 mb-2">Service Under Maintenance</h3>
                   <p className="text-sm text-orange-700 mb-4">
-                    The transfer service is temporarily unavailable. We're working to restore service as quickly as possible.
+                    The transfer service is temporarily unavailable. We&apos;re working to restore service as quickly as possible.
                   </p>
                   <p className="text-xs text-orange-600">
                     Please try again later or contact support if this issue persists.

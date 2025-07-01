@@ -19,6 +19,17 @@ export interface TransferCreateRequest {
   bank_accounts?: BankAccountInfo[];
 }
 
+export interface StatusHistoryEntry {
+  from_status?: string;
+  to_status: string;
+  timestamp: string;
+  changed_by: string;
+  changed_by_name?: string;
+  message?: string;
+  admin_remarks?: string;
+  internal_notes?: string;
+}
+
 export interface TransferResponse {
   id: string;
   transfer_id: string;
@@ -37,6 +48,7 @@ export interface TransferResponse {
   required_confirmations?: number;
   bank_account_info?: any;
   bank_accounts?: any[];
+  status_history?: StatusHistoryEntry[];
   created_at: string;
   updated_at: string;
   completed_at?: string;

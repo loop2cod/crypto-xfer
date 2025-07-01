@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { CheckCircle, Clock, AlertCircle, XCircle, Loader2, Copy, Check } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, XCircle, Loader2, Copy, Check, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useTransfer } from '@/context/TransferContext';
 import { transferService } from '@/services/transfer';
 
@@ -29,6 +30,7 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
   } | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [copiedHash, setCopiedHash] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Copy hash function
   const copyHashToClipboard = async (hash: string) => {
@@ -101,6 +103,20 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
         bgColor: 'bg-gray-100',
         text: 'Cancelled',
         description: 'Transfer was cancelled'
+      },
+      on_hold: {
+        icon: AlertCircle,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100',
+        text: 'On Hold',
+        description: 'Transfer is on hold'
+      },
+      refunded: {
+        icon: CheckCircle,
+        color: 'text-pink-600',
+        bgColor: 'bg-pink-100',
+        text: 'Refunded',
+        description: 'Transfer has been refunded'
       }
     };
 
@@ -202,6 +218,66 @@ export const TransferStatus: React.FC<TransferStatusProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Status History */}
+        {currentTransfer?.status_history && currentTransfer.status_history.length > 0 && (
+          <div className="border-t pt-4">
+            <Collapsible open={showHistory} onOpenChange={setShowHistory}>
+              <CollapsibleTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full justify-between p-2 h-auto"
+                >
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    <span className="text-sm font-medium">Status History</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {currentTransfer.status_history.length}
+                    </Badge>
+                  </div>
+                  {showHistory ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pt-2">
+                {currentTransfer.status_history
+                  .slice()
+                  .reverse()
+                  .map((entry: any, index: number) => (
+                  <div key={index} className="border-l-2 border-gray-200 pl-3 py-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {entry.from_status ? `${entry.from_status} → ${entry.to_status}` : `Initial: ${entry.to_status}`}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {transferService.formatDate(entry.timestamp)}
+                        </p>
+                      </div>
+                      <Badge className={`text-xs ${getStatusInfo(entry.to_status).bgColor} ${getStatusInfo(entry.to_status).color}`}>
+                        {entry.to_status}
+                      </Badge>
+                    </div>
+                    {entry.message && (
+                      <p className="text-xs text-gray-700 mt-1">
+                        {entry.message}
+                      </p>
+                    )}
+                    {entry.admin_remarks && (
+                      <p className="text-xs text-blue-700 mt-1">
+                        <strong>Admin Note:</strong> {entry.admin_remarks}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
 
