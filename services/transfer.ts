@@ -61,6 +61,16 @@ export interface TransferStatusResponse {
   confirmation_count: number;
 }
 
+export interface PaginatedTransfersResponse {
+  transfers: TransferResponse[];
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -110,7 +120,7 @@ export const transferService = {
     limit: number = 20,
     typeFilter?: string,
     statusFilter?: string
-  ): Promise<ApiResponse<TransferResponse[]>> {
+  ): Promise<ApiResponse<PaginatedTransfersResponse>> {
     try {
       const params = new URLSearchParams({
         skip: skip.toString(),
@@ -120,7 +130,7 @@ export const transferService = {
       if (typeFilter) params.append('type_filter', typeFilter);
       if (statusFilter) params.append('status_filter', statusFilter);
 
-      const response = await get<ApiResponse<TransferResponse[]>>(
+      const response = await get<ApiResponse<PaginatedTransfersResponse>>(
         `${TRANSFER_ENDPOINTS.GET_ALL}?${params.toString()}`
       );
       return response;

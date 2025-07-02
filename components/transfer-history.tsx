@@ -21,14 +21,16 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
   showFilters = true,
   showPagination = true,
 }) => {
-  const { transfers, getUserTransfers, isLoading } = useTransfer();
+  const { transfers, getUserTransfers, isLoading, totalCount, currentPage: contextCurrentPage, totalPages, hasNext, hasPrev } = useTransfer();
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
-    getUserTransfers(currentPage * limit, limit);
+    const typeParam = typeFilter || undefined;
+    const statusParam = statusFilter || undefined;
+    getUserTransfers(currentPage * limit, limit, typeParam, statusParam);
   }, [currentPage, limit, statusFilter, typeFilter, getUserTransfers]);
 
   const getStatusIcon = (status: string) => {
@@ -50,11 +52,16 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
     router.push(`/transfer/${transferId}`);
   };
 
-  const filteredTransfers = transfers.filter(transfer => {
-    const matchesStatus = !statusFilter || transfer.status === statusFilter;
-    const matchesType = !typeFilter || transfer.type_ === typeFilter;
-    return matchesStatus && matchesType;
-  });
+  // Reset to first page when filters change
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(0);
+  };
+
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value);
+    setCurrentPage(0);
+  };
 
   if (isLoading && transfers.length === 0) {
     return (
@@ -70,13 +77,12 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <>
         <div className="flex items-center justify-between">
           <CardTitle>Transfer History</CardTitle>
           {showFilters && (
             <div className="flex items-center space-x-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -89,8 +95,8 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+
+              <Select value={typeFilter} onValueChange={handleTypeFilterChange}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
@@ -103,22 +109,19 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
             </div>
           )}
         </div>
-      </CardHeader>
-      
-      <CardContent>
-        {filteredTransfers.length === 0 ? (
+        {transfers.length === 0 ? (
           <div className="text-center py-8">
             <div className="text-gray-400 mb-2">
               <ArrowUpRight className="w-12 h-12 mx-auto" />
             </div>
             <p className="text-gray-500 mb-2">No transfers found</p>
             <p className="text-sm text-gray-400">
-              {statusFilter || typeFilter 
+              {statusFilter || typeFilter
                 ? 'Try adjusting your filters or create your first transfer'
                 : 'Create your first transfer to get started'
               }
             </p>
-            <Button 
+            <Button
               onClick={() => router.push('/transfer')}
               className="mt-4"
               variant="outline"
@@ -127,8 +130,8 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredTransfers.slice(0, limit).map((transfer) => {
+          <div className="space-y-2">
+            {transfers.map((transfer) => {
               const StatusIcon = getStatusIcon(transfer.status);
               const TypeIcon = getTypeIcon(transfer.type_);
               const statusInfo = transferService.formatTransferStatus(transfer.status);
@@ -184,33 +187,32 @@ export const TransferHistory: React.FC<TransferHistoryProps> = ({
           </div>
         )}
         
-        {showPagination && filteredTransfers.length > limit && (
+        {showPagination && totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 pt-4 border-t">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-              disabled={currentPage === 0 || isLoading}
+              disabled={!hasPrev || isLoading}
             >
               Previous
             </Button>
-            
+
             <span className="text-sm text-gray-600">
-              Page {currentPage + 1}
+              Page {currentPage + 1} of {totalPages}
             </span>
-            
+
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={filteredTransfers.length < limit || isLoading}
+              disabled={!hasNext || isLoading}
             >
               Next
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+</>
   );
 };
 

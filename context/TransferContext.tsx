@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { transferService, TransferResponse, TransferCreateRequest, BankAccountInfo } from '@/services/transfer';
+import { transferService, TransferResponse, TransferCreateRequest, BankAccountInfo, PaginatedTransfersResponse } from '@/services/transfer';
 
 interface TransferContextType {
   // State
@@ -9,6 +9,13 @@ interface TransferContextType {
   currentTransfer: TransferResponse | null;
   isLoading: boolean;
   error: string | null;
+
+  // Pagination state
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
   
   // Transfer creation flow state
   transferStep: number;
@@ -20,7 +27,7 @@ interface TransferContextType {
   
   // Actions
   createTransfer: (data: TransferCreateRequest) => Promise<TransferResponse | null>;
-  getUserTransfers: (skip?: number, limit?: number) => Promise<void>;
+  getUserTransfers: (skip?: number, limit?: number, typeFilter?: string, statusFilter?: string) => Promise<void>;
   getTransferById: (id: string) => Promise<void>;
   getTransferStatus: (id: string) => Promise<{ status: string; status_message?: string; confirmation_count: number } | null>;
   
@@ -73,6 +80,13 @@ export const TransferProvider: React.FC<TransferProviderProps> = ({ children }) 
   const [currentTransfer, setCurrentTransfer] = useState<TransferResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
   
   // Transfer creation flow state
   const [transferStep, setTransferStep] = useState(1);
@@ -115,14 +129,24 @@ export const TransferProvider: React.FC<TransferProviderProps> = ({ children }) 
     }
   }, []);
 
-  const getUserTransfers = useCallback(async (skip: number = 0, limit: number = 20) => {
+  const getUserTransfers = useCallback(async (
+    skip: number = 0,
+    limit: number = 20,
+    typeFilter?: string,
+    statusFilter?: string
+  ) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const response = await transferService.getUserTransfers(skip, limit);
+      const response = await transferService.getUserTransfers(skip, limit, typeFilter, statusFilter);
       if (response.success) {
-        setTransfers(response.data);
+        setTransfers(response.data.transfers);
+        setTotalCount(response.data.total_count);
+        setCurrentPage(response.data.page);
+        setTotalPages(response.data.total_pages);
+        setHasNext(response.data.has_next);
+        setHasPrev(response.data.has_prev);
       } else {
         setError(response.message || 'Failed to fetch transfers');
       }
@@ -293,6 +317,13 @@ export const TransferProvider: React.FC<TransferProviderProps> = ({ children }) 
     currentTransfer,
     isLoading,
     error,
+
+    // Pagination state
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNext,
+    hasPrev,
     
     // Transfer creation flow state
     transferStep,
