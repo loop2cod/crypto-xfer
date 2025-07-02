@@ -113,12 +113,10 @@ export default function Dashboard() {
   }
 
   // Use dashboard data if available, otherwise fallback to mock data
-  const totalSent = dashboardData?.stats.total_sent || transactions
-    .filter((t) => t.type === "crypto-to-fiat" && t.status === "completed")
-    .reduce((sum, t) => sum + Number.parseFloat(t.amount), 0)
+  const totalSent = dashboardData?.stats.total_sent || 0
 
-  const pendingCount = dashboardData?.stats.pending_requests || transactions.filter((t) => t.status === "pending").length
-  const completedCount = dashboardData?.stats.completed_transfers || transactions.filter((t) => t.status === "completed").length
+  const pendingCount = dashboardData?.stats.pending_requests || 0
+  const completedCount = dashboardData?.stats.completed_transfers || 0
 
 
   if (isLoading) {
