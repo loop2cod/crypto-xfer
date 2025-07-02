@@ -12,7 +12,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  logout: () => void;
+  logout: () => Promise<void>;
   clearError: () => void;
   checkAuth: () => boolean;
   setAuthenticated: (user?: any) => void;
@@ -86,14 +86,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    AuthPersistence.handleLogout();
-    setState(prev => ({
-      ...prev,
-      user: null,
-      isAuthenticated: false,
-      error: null,
-    }));
+  const logout = async () => {
+    try {
+      // Call the logout API endpoint to log the activity
+      await authService.logout();
+    } catch (error) {
+      console.warn('Logout API call failed:', error);
+    } finally {
+      // Always clear auth state
+      AuthPersistence.handleLogout();
+      setState(prev => ({
+        ...prev,
+        user: null,
+        isAuthenticated: false,
+        error: null,
+      }));
+    }
   };
 
   const setAuthenticated = (user?: any) => {

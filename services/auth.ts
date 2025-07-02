@@ -40,6 +40,7 @@ export interface RefreshTokenRequest {
 const AUTH_ENDPOINTS = {
   REGISTER: '/api/v1/auth/register',
   LOGIN: '/api/v1/auth/login',
+  LOGOUT: '/api/v1/auth/logout',
   REFRESH: '/api/v1/auth/refresh',
   SEND_VERIFICATION: '/api/v1/auth/send-verification',
   VERIFY_EMAIL: '/api/v1/auth/verify-email',
@@ -172,11 +173,20 @@ export const authService = {
     }
   },
 
-  logout(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('token_type');
-    localStorage.removeItem('user_data');
+  async logout(): Promise<void> {
+    try {
+      // Call the logout endpoint to log the activity
+      await post(AUTH_ENDPOINTS.LOGOUT);
+    } catch (error) {
+      // Continue with logout even if the API call fails
+      console.warn('Logout API call failed:', error);
+    } finally {
+      // Always clear local storage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('token_type');
+      localStorage.removeItem('user_data');
+    }
   },
 
   getAccessToken(): string | null {

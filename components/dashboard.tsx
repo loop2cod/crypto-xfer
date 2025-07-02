@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {  RefreshCw, Send, Plus, Clock, CheckCircle, AlertCircle, Eye, LogOut, User, Shield, Calendar } from "lucide-react"
+import {  RefreshCw, Send, Clock, CheckCircle, AlertCircle, Eye, LogOut, User, Shield, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,6 +15,7 @@ import useToast from "@/hooks/useToast"
 import useDashboard from "@/hooks/useDashboard"
 import dashboardService from "@/services/dashboard"
 import TransferHistory from "@/components/transfer-history"
+import UserActivityComponent from "@/components/user-activity"
 
 interface Transaction {
   id: string
@@ -47,9 +48,18 @@ export default function Dashboard() {
 
   const email = user?.email || "user@example.com"
 
-  const handleLogout = () => {
-    logout()
-    // Note: The auth context will handle redirecting to login
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // Note: The auth context will handle redirecting to login
+    } catch (error) {
+      console.error('Logout failed:', error)
+      showToast({
+        title: 'Error',
+        description: 'Failed to logout. Please try again.',
+        variant: 'destructive',
+      })
+    }
   }
 
   // Mock transaction data
@@ -249,15 +259,14 @@ export default function Dashboard() {
                 <span className="text-sm">Send to Bank</span>
               </Button>
             </Link>
-            <Link href="/buy">
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center space-x-2 h-10 border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="text-sm">Buy USDT</span>
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              disabled
+              className="w-full flex items-center justify-center space-x-2 h-10 border-gray-300 text-gray-500 bg-gray-100 cursor-not-allowed"
+            >
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">Under Maintenance</span>
+            </Button>
           </div>
 
           {/* Navigation Tabs */}
@@ -356,17 +365,18 @@ export default function Dashboard() {
           {activeTab === "Activity" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-base font-semibold">Transfer History</h3>
+                <h3 className="text-base font-semibold">Account Activity</h3>
                 <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
                   <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
                   <span className="text-xs">Refresh</span>
                 </Button>
               </div>
 
-              <TransferHistory 
-                limit={20}
+              <UserActivityComponent 
+                limit={10}
                 showFilters={true}
                 showPagination={true}
+                showStats={true}
               />
             </div>
           )}
