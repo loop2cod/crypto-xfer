@@ -1,23 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { ArrowLeft, Copy, CheckCircle, Loader2, Plus, Trash2 } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { ArrowLeft, Copy, CheckCircle, Loader2, Plus, Trash2, Upload, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { Separator } from "@/components/ui/separator"
 import { QRCodeSVG } from "qrcode.react"
 import { useTransfer, BankAccount } from "@/context/TransferContext"
 import { useToast } from "@/hooks/useToast"
 import { transferService } from "@/services/transfer"
 import { walletService } from "@/services/wallet"
 import AuthWrapper from "@/components/AuthWrapper"
+import ToastContainer from "@/components/ui/toast-container"
 
 export default function TransferPage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const { toast,toasts, hideToast } = useToast()
   const {
     // State
     isLoading,
@@ -39,6 +39,7 @@ export default function TransferPage() {
     setDepositWalletAddress,
     setTransactionHash,
     setFeePercentage,
+    setBankAccounts,
     addBankAccount,
     removeBankAccount,
     updateBankAccount,
@@ -63,6 +64,9 @@ export default function TransferPage() {
     isVerified: false,
     verificationMessage: ""
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingExcel, setIsUploadingExcel] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const adminWallet = primaryWallet?.address || "TAQ2TfR4Pk6GPstVPExPo4QvdwcyJTzDSf"
 
@@ -88,7 +92,7 @@ export default function TransferPage() {
         if (error?.response?.status === 401) {
           toast({
             title: "Authentication Required",
-            description: "Please log in to access the transfer feature.",
+            message: "Please log in to access the transfer feature.",
             variant: "destructive",
           })
           // Could redirect to login page
@@ -100,7 +104,7 @@ export default function TransferPage() {
 
         toast({
           title: "Service Under Maintenance",
-          description: "The transfer service is temporarily unavailable. Please try again later.",
+          message: "The transfer service is temporarily unavailable. Please try again later.",
           variant: "destructive",
         })
       }
@@ -114,7 +118,7 @@ export default function TransferPage() {
     if (error) {
       toast({
         title: "Error",
-        description: error,
+        message: error,
         variant: "destructive",
       })
     }
@@ -130,7 +134,7 @@ export default function TransferPage() {
     if (!transactionHash || !depositWalletAddress || !transferAmount) {
       toast({
         title: "Missing Information",
-        description: "Please provide transaction hash, wallet address, and amount",
+        message: "Please provide transaction hash, wallet address, and amount",
         variant: "destructive",
       })
       return
@@ -155,7 +159,7 @@ export default function TransferPage() {
         })
         toast({
           title: "Transaction Verified",
-          description: `${result.data.message}. You can now proceed to add bank details.`,
+          message: `${result.data.message}. You can now proceed to add bank details.`,
         })
         setTransferStep(3)
       } else {
@@ -166,7 +170,7 @@ export default function TransferPage() {
         })
         toast({
           title: "Verification Failed",
-          description: result.data.message,
+          message: result.data.message,
           variant: "destructive",
         })
       }
@@ -178,7 +182,7 @@ export default function TransferPage() {
       })
       toast({
         title: "Verification Error",
-        description: error.message || "Failed to verify transaction hash",
+        message: error.message || "Failed to verify transaction hash",
         variant: "destructive",
       })
     }
@@ -190,7 +194,7 @@ export default function TransferPage() {
       if (!transferAmount || parseFloat(transferAmount) <= 0) {
         toast({
           title: "Invalid Amount",
-          description: "Please enter a valid amount greater than 0",
+          message: "Please enter a valid amount greater than 0",
           variant: "destructive",
         })
         return
@@ -210,7 +214,83 @@ export default function TransferPage() {
   }
 
   const handleSubmit = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return
+    
+    setIsSubmitting(true)
+    
     try {
+      // Pre-validation checks
+      if (!transferAmount || parseFloat(transferAmount) <= 0) {
+        toast({
+          title: "Invalid Amount",
+          message: "Please enter a valid transfer amount greater than 0",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!depositWalletAddress) {
+        toast({
+          title: "Missing Wallet Address",
+          message: "Please enter your deposit wallet address",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!transactionHash) {
+        toast({
+          title: "Missing Transaction Hash",
+          message: "Please enter the transaction hash",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (!hashVerification.isVerified) {
+        toast({
+          title: "Transaction Not Verified",
+          message: "Please verify your transaction hash before proceeding",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (bankAccounts.length === 0) {
+        toast({
+          title: "No Bank Accounts",
+          message: "Please add at least one bank account",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Check if all bank accounts are valid
+      if (!areAllBankAccountsValid()) {
+        toast({
+          title: "Invalid Bank Details",
+          message: "Please complete all bank account information",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Check if allocation matches available amount
+      const totalAvailable = calculateFeeAndNet(parseFloat(transferAmount)).netAmount
+      const totalAllocated = getTotalAllocated()
+      const difference = Math.abs(totalAllocated - totalAvailable)
+      
+      if (difference > 0.01) { // Allow small rounding differences
+        console.log("Amount Mismatch")
+        toast({
+          title: "Amount Mismatch",
+          message: `Total allocated amount (${totalAllocated.toFixed(2)}) must equal available amount (${totalAvailable.toFixed(2)})`,
+          variant: "destructive",
+        })
+        return
+      }
+
       // Validate all data before submission
       const transferData = {
         type: 'crypto-to-fiat' as const,
@@ -232,11 +312,17 @@ export default function TransferPage() {
       if (!validation.isValid) {
         toast({
           title: "Validation Error",
-          description: validation.errors[0],
+          message: validation.errors[0],
           variant: "destructive",
         })
         return
       }
+
+      // Show loading toast
+      toast({
+        title: "Creating Transfer",
+        message: "Please wait while we process your transfer request...",
+      })
 
       // Create transfer
       const result = await createTransfer(transferData)
@@ -244,19 +330,218 @@ export default function TransferPage() {
       if (result) {
         toast({
           title: "Transfer Created Successfully",
-          description: "Your transfer request has been submitted and is being processed.",
+          message: "Your transfer request has been submitted and is being processed.",
         })
         
-        // Redirect to transfer status page
-        router.push(`/transfer/${result.id}`)
+        // Small delay to show success message
+        setTimeout(() => {
+          router.push(`/transfer/${result.id}`)
+        }, 1500)
       }
     } catch (error: any) {
+      console.error('Transfer submission error:', error)
+      
+      // Handle specific error types
+      if (error?.response?.status === 400) {
+        toast({
+          title: "Invalid Transfer Data",
+          message: error?.response?.data?.detail || "Please check your transfer details and try again.",
+          variant: "destructive",
+        })
+      } else if (error?.response?.status === 401) {
+        toast({
+          title: "Authentication Required",
+          message: "Please log in to create a transfer.",
+          variant: "destructive",
+        })
+      } else if (error?.response?.status === 403) {
+        toast({
+          title: "Access Denied",
+          message: "You don't have permission to create transfers.",
+          variant: "destructive",
+        })
+      } else if (error?.response?.status === 422) {
+        toast({
+          title: "Validation Error",
+          message: error?.response?.data?.detail || "Please check your input data.",
+          variant: "destructive",
+        })
+      } else if (error?.response?.status >= 500) {
+        toast({
+          title: "Server Error",
+          message: "A server error occurred. Please try again later or contact support.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Transfer Failed",
+          message: error.message || "Failed to create transfer. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Excel handling functions
+  const downloadSampleExcel = () => {
+    const csvContent = [
+      "Account Holder Name,Account Number,Bank Name,Routing Number,Transfer Amount",
+      "John Doe,1234567890,Chase Bank,021000021,500.00",
+      "Jane Smith,0987654321,Bank of America,121000358,300.00",
+      "Bob Johnson,1122334455,Wells Fargo,121042882,200.00",
+      "Alice Brown,5566778899,Citibank,021000089,150.00"
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.setAttribute('href', url)
+    link.setAttribute('download', 'bank_accounts_sample.csv')
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    toast({
+      title: "Sample Downloaded",
+      message: "Sample CSV file has been downloaded. Edit it with your bank details and upload it back.",
+    })
+  }
+
+  const handleExcelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx')) {
       toast({
-        title: "Transfer Failed",
-        description: error.message || "Failed to create transfer. Please try again.",
+        title: "Invalid File Format",
+        message: "Please upload a CSV or Excel file",
         variant: "destructive",
       })
+      return
     }
+
+    setIsUploadingExcel(true)
+    
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string
+        const lines = text.split('\n')
+        
+        // Skip header row
+        const dataLines = lines.slice(1).filter(line => line.trim() !== '')
+        
+        if (dataLines.length === 0) {
+          toast({
+            title: "Empty File",
+            message: "No data found in the uploaded file",
+            variant: "destructive",
+          })
+          setIsUploadingExcel(false)
+          return
+        }
+
+        // Parse CSV data
+        const parsedAccounts: BankAccount[] = []
+        let hasErrors = false
+        
+        dataLines.forEach((line, index) => {
+          const columns = line.split(',').map(col => col.trim().replace(/"/g, ''))
+          
+          if (columns.length < 5) {
+            toast({
+              title: "Invalid Format",
+              message: `Row ${index + 2}: Expected 5 columns, got ${columns.length}`,
+              variant: "destructive",
+            })
+            hasErrors = true
+            return
+          }
+
+          const [accountName, accountNumber, bankName, routingNumber, transferAmount] = columns
+          
+          // Validate required fields
+          if (!accountName || !accountNumber || !bankName || !routingNumber || !transferAmount) {
+            toast({
+              title: "Missing Data",
+              message: `Row ${index + 2}: All fields are required`,
+              variant: "destructive",
+            })
+            hasErrors = true
+            return
+          }
+
+          // Validate transfer amount
+          const amount = parseFloat(transferAmount)
+          if (isNaN(amount) || amount <= 0) {
+            toast({
+              title: "Invalid Amount",
+              message: `Row ${index + 2}: Transfer amount must be a valid number greater than 0`,
+              variant: "destructive",
+            })
+            hasErrors = true
+            return
+          }
+
+          parsedAccounts.push({
+            id: `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+            accountName,
+            accountNumber,
+            bankName,
+            routingNumber,
+            transferAmount: transferAmount,
+          })
+        })
+
+        if (hasErrors) {
+          setIsUploadingExcel(false)
+          return
+        }
+
+        // Check if total amount doesn't exceed available amount
+        const totalAvailable = transferAmount ? calculateFeeAndNet(parseFloat(transferAmount)).netAmount : 0
+        const totalFromFile = parsedAccounts.reduce((sum, account) => sum + parseFloat(account.transferAmount), 0)
+        
+        if (totalFromFile > totalAvailable) {
+          toast({
+            title: "Amount Exceeds Available",
+            message: `Total amount in file ($${totalFromFile.toFixed(2)}) exceeds available amount ($${totalAvailable.toFixed(2)})`,
+            variant: "destructive",
+          })
+          setIsUploadingExcel(false)
+          return
+        }
+
+        // Use setBankAccounts to replace all accounts at once
+        // This is much more reliable than adding accounts one by one
+        setBankAccounts(parsedAccounts)
+
+        toast({
+          title: "Excel File Uploaded",
+          message: `Successfully imported ${parsedAccounts.length} bank accounts`,
+        })
+        
+      } catch (error) {
+        console.error('Error parsing Excel file:', error)
+        toast({
+          title: "Parse Error",
+          message: "Failed to parse the uploaded file. Please check the format.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsUploadingExcel(false)
+        // Clear file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
+    }
+    
+    reader.readAsText(file)
   }
 
   return (
@@ -633,15 +918,71 @@ export default function TransferPage() {
                 </div>
               ))}
 
-              <Button
-                onClick={addBankAccount}
-                variant="outline"
-                className="w-full border-dashed border-gray-300 flex items-center justify-center py-2"
-                disabled={isLoading || getRemainingAmount() <= 0}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Another Bank Account
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={addBankAccount}
+                  variant="outline"
+                  className="w-full border-dashed border-gray-300 flex items-center justify-center py-2"
+                  disabled={isLoading || getRemainingAmount() <= 0}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Another Bank Account
+                </Button>
+
+                {/* Bulk Upload Section */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Bulk Upload Bank Accounts</h4>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Upload multiple bank accounts at once using a CSV file. This will replace all existing bank accounts.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      onClick={downloadSampleExcel}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 sm:flex-none"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Sample CSV
+                    </Button>
+                    
+                    <div className="flex-1">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".csv,.xlsx"
+                        onChange={handleExcelUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        disabled={isUploadingExcel || isLoading}
+                      >
+                        {isUploadingExcel ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload CSV File
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 text-xs text-gray-500">
+                    <p><strong>CSV Format:</strong> Account Holder Name, Account Number, Bank Name, Routing Number, Transfer Amount</p>
+                    <p className="mt-1"><strong>Note:</strong> Total amounts must not exceed your available balance</p>
+                  </div>
+                </div>
+              </div>
 
               {(() => {
                 const totalAvailable = transferAmount ? calculateFeeAndNet(parseFloat(transferAmount)).netAmount : 0;
@@ -682,15 +1023,15 @@ export default function TransferPage() {
               })()}
 
               <div className="flex space-x-3 mt-6">
-                <Button variant="outline" onClick={handleBack} className="flex-1 border-gray-300" disabled={isLoading}>
+                <Button variant="outline" onClick={handleBack} className="flex-1 border-gray-300" disabled={isLoading || isSubmitting}>
                   Back
                 </Button>
                 <Button
                   onClick={handleSubmit}
                   className="flex-1 bg-gray-900 hover:bg-gray-800"
-                  disabled={!areAllBankAccountsValid() || isLoading}
+                  disabled={!areAllBankAccountsValid() || isLoading || isSubmitting}
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Submitting...
@@ -707,6 +1048,7 @@ export default function TransferPage() {
         </div>
       </div>
       </div>
+       <ToastContainer toasts={toasts} onHideToast={hideToast} />
     </AuthWrapper>
   )
 }

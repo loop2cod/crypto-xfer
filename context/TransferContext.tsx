@@ -288,25 +288,6 @@ export const TransferProvider: React.FC<TransferProviderProps> = ({ children }) 
     // Check if total allocation is valid (not exceeding available amount with tolerance)
     const isAllocationValid = totalAllocated > 0 && totalAllocated <= (totalAmount + epsilon);
 
-    // Debug logging to help troubleshoot validation issues
-    if (transferAmount && bankAccounts.some(acc => acc.transferAmount)) {
-      console.log('Validation Debug:', {
-        transferAmount,
-        feePercentage,
-        totalAmount: totalAmount.toFixed(2),
-        totalAllocated: totalAllocated.toFixed(2),
-        allAccountsHaveValidData,
-        isAllocationValid,
-        bankAccounts: bankAccounts.map(acc => ({
-          id: acc.id,
-          accountName: acc.accountName,
-          accountNumber: acc.accountNumber,
-          bankName: acc.bankName,
-          routingNumber: acc.routingNumber,
-          transferAmount: acc.transferAmount
-        }))
-      });
-    }
 
     return allAccountsHaveValidData && isAllocationValid;
   }, [bankAccounts, transferAmount, feePercentage, getTotalAllocated]);

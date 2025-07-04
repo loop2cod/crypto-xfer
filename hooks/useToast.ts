@@ -11,7 +11,7 @@ export interface Toast {
 
 interface ToastOptions {
   title?: string;
-  description?: string;
+  message?: string;
   variant?: 'default' | 'destructive' | 'success';
   duration?: number;
 }
