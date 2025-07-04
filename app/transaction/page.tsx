@@ -22,7 +22,7 @@ export default function TransactionPage() {
     if (error) {
       toast({
         title: "Error",
-        description: error,
+        message: error,
         variant: "destructive",
       });
     }

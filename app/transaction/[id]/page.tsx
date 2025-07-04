@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { useState } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
+import ToastContainer from "@/components/ui/toast-container"
+import useToast from "@/hooks/useToast"
 
 interface BankAccount {
   id: string
@@ -44,6 +46,7 @@ export default function TransactionDetailsPage() {
   const router = useRouter()
   const [copied, setCopied] = useState<string | null>(null)
   const params = useParams()
+  const { toast, toasts, hideToast } = useToast();
 
   // Mock transaction data - in real app, fetch by ID
   const transaction: Transaction = {
@@ -439,6 +442,7 @@ export default function TransactionDetailsPage() {
           </div>
         </div>
       </div>
+      <ToastContainer toasts={toasts} onHideToast={hideToast} />
     </div>
   )
 }

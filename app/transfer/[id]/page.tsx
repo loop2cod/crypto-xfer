@@ -10,11 +10,12 @@ import TransferStatus from '@/components/transfer-status';
 import TransferTimeline from '@/components/transfer-timeline';
 import { useToast } from '@/hooks/useToast';
 import AuthWrapper from '@/components/AuthWrapper';
+import ToastContainer from '@/components/ui/toast-container';
 
 export default function TransferStatusPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
+  const { toast, toasts, hideToast } = useToast();
   const transferId = params.id as string;
   
   const {
@@ -37,7 +38,7 @@ export default function TransferStatusPage() {
     if (error) {
       toast({
         title: "Error",
-        description: error,
+        message: error,
         variant: "destructive",
       });
     }
@@ -50,7 +51,7 @@ export default function TransferStatusPage() {
 
       toast({
         title: "Refreshed",
-        description: "Transfer status has been updated",
+        message: "Transfer status has been updated",
       });
     }
   };
@@ -190,6 +191,7 @@ export default function TransferStatusPage() {
         </Card>
       </main>
       </div>
+      <ToastContainer toasts={toasts} onHideToast={hideToast} />
     </AuthWrapper>
   );
 }
