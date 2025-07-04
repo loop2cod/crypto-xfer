@@ -49,7 +49,7 @@ export default function PaymentMethodsComponent({ onPaymentSelect, defaultAmount
       console.error('Error loading payment methods:', error);
       toast({
         title: "Error",
-        description: "Failed to load payment methods",
+        message: "Failed to load payment methods",
         variant: "destructive"
       });
     } finally {
@@ -96,13 +96,13 @@ export default function PaymentMethodsComponent({ onPaymentSelect, defaultAmount
       setCopiedAddress(true);
       toast({
         title: "Copied!",
-        description: "Wallet address copied to clipboard",
+        message: "Wallet address copied to clipboard",
       });
       setTimeout(() => setCopiedAddress(false), 2000);
     } else {
       toast({
         title: "Error",
-        description: "Failed to copy address",
+        message: "Failed to copy address",
         variant: "destructive"
       });
     }
@@ -113,7 +113,7 @@ export default function PaymentMethodsComponent({ onPaymentSelect, defaultAmount
     if (amountNum <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid amount",
+        message: "Please enter a valid amount",
         variant: "destructive"
       });
       return;
@@ -123,7 +123,7 @@ export default function PaymentMethodsComponent({ onPaymentSelect, defaultAmount
     if (!feeInfo) {
       toast({
         title: "Fee Calculation Error",
-        description: "Unable to calculate fees for this payment method",
+        message: "Unable to calculate fees for this payment method",
         variant: "destructive"
       });
       return;

@@ -22,13 +22,13 @@ export default function TransferTimeline({ transfer }: TransferTimelineProps) {
       setTimeout(() => setCopiedHash(false), 2000);
       toast({
         title: "Copied!",
-        description: "Transaction hash copied to clipboard",
+        message: "Transaction hash copied to clipboard",
       });
     } catch (error) {
       console.error('Failed to copy hash:', error);
       toast({
         title: "Copy Failed",
-        description: "Could not copy transaction hash",
+        message: "Could not copy transaction hash",
         variant: "destructive",
       });
     }
